@@ -36,7 +36,7 @@ module.exports = cfg => {
       command: `sh`,
       args: [
         `-c`,
-        `./node_modules/.bin/tap ${args} --nyc-arg='--instrument=false' --reporter classic -J ./dist/*.test.js && echo '\n✓ ALL TESTS PASSED!' ${onFail}`
+        `./node_modules/.bin/tap ${args} --nyc-arg='--instrument=false' --reporter classic -J ./dist/${process.env.TEST_FOCUS ? '*'+process.env.TEST_FOCUS : ''}*.test.js && echo '\n✓ ALL TESTS PASSED!' ${onFail}`
       ]
     }]
   }));
