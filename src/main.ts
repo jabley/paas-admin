@@ -10,14 +10,16 @@ const logger = pino({
   level: process.env.LOG_LEVEL || 'warn',
 });
 
-function expectEnvVariable(variableName: string): string {
+function getEnvVariable(variableName: string, required?: boolean, defaultValue?: string): string {
   const value = process.env[variableName] || '';
-
   if (value === '') {
-    logger.error(`Expected environment variable "${variableName}" to be set.`);
-    process.exit(100);
+    if (required) {
+      logger.error(`Expected environment variable "${variableName}" to be set.`);
+      process.exit(100);
+    } else if (defaultValue) {
+      return defaultValue;
+    }
   }
-
   return value;
 }
 
@@ -51,18 +53,21 @@ async function main(cfg: IAppConfig) {
   return server.wait();
 }
 
+const isSingleUserMode = getEnvVariable('SINGLE_USER_ACCESS_TOKEN', false) !== '';
+
 const config = {
   logger,
-  sessionSecret: process.env.SESSION_SECRET || 'mysecret',
+  sessionSecret: getEnvVariable('SESSION_SECRET', false, 'mysecret'),
   allowInsecureSession: (process.env.ALLOW_INSECURE_SESSION === 'true'),
-  oauthAuthorizationURL: expectEnvVariable('OAUTH_AUTHORIZATION_URL'),
-  oauthTokenURL: expectEnvVariable('OAUTH_TOKEN_URL'),
-  oauthClientID: expectEnvVariable('OAUTH_CLIENT_ID'),
-  oauthClientSecret: expectEnvVariable('OAUTH_CLIENT_SECRET'),
-  cloudFoundryAPI: expectEnvVariable('API_URL'),
-  uaaAPI: expectEnvVariable('UAA_URL'),
-  notifyAPIKey: expectEnvVariable('NOTIFY_API_KEY'),
-  notifyWelcomeTemplateID: process.env.NOTIFY_WELCOME_TEMPLATE_ID || null,
+  oauthAuthorizationURL: getEnvVariable('OAUTH_AUTHORIZATION_URL', !isSingleUserMode, '[no-auth-url-set]'),
+  oauthTokenURL: getEnvVariable('OAUTH_TOKEN_URL', !isSingleUserMode, '[no-token-url-set]'),
+  oauthClientID: getEnvVariable('OAUTH_CLIENT_ID', !isSingleUserMode, '[no-client-id-set]'),
+  oauthClientSecret: getEnvVariable('OAUTH_CLIENT_SECRET', !isSingleUserMode, '[no-client-secret-set]'),
+  singleUserAccessToken: getEnvVariable('SINGLE_USER_ACCESS_TOKEN', false),
+  cloudFoundryAPI: getEnvVariable('API_URL', true),
+  uaaAPI: getEnvVariable('UAA_URL', !isSingleUserMode, '[no-uaa-url-set]'),
+  notifyAPIKey: getEnvVariable('NOTIFY_API_KEY', !isSingleUserMode, '[no-notify-api-key-set]'),
+  notifyWelcomeTemplateID: getEnvVariable('NOTIFY_WELCOME_TEMPLATE_ID', false),
 };
 
 main(config).then(onShutdown).catch(onError);

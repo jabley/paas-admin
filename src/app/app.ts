@@ -26,6 +26,7 @@ export interface IAppConfig {
   readonly oauthAuthorizationURL: string;
   readonly oauthClientID: string;
   readonly oauthClientSecret: string;
+  readonly singleUserAccessToken?: string;
   readonly oauthTokenURL: string;
   readonly sessionSecret: string;
   readonly uaaAPI: string;
@@ -94,6 +95,7 @@ export default function(config: IAppConfig) {
       clientID: config.oauthClientID,
       clientSecret: config.oauthClientSecret,
     },
+    accessToken: config.singleUserAccessToken,
   }));
 
   app.use(routerMiddleware(router));
