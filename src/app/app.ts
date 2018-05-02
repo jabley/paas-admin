@@ -19,6 +19,7 @@ import router from './router';
 
 export interface IAppConfig {
   readonly allowInsecureSession?: boolean;
+  readonly billingAPI: string;
   readonly cloudFoundryAPI: string;
   readonly logger: BaseLogger;
   readonly notifyAPIKey: string;

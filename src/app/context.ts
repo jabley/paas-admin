@@ -4,6 +4,7 @@ import CloudFoundryClient from '../cf';
 import Router, { IParameters, Route } from '../lib/router';
 import NotificationClient from '../notify';
 import UAAClient from '../uaa';
+import { IAppConfig } from './app';
 
 export interface IRawToken {
   readonly user_id: string;
@@ -12,6 +13,7 @@ export interface IRawToken {
 
 export interface IContext {
   readonly cf: CloudFoundryClient;
+  readonly app: IAppConfig;
   readonly routePartOf: (name: string) => boolean;
   readonly linkTo: (name: string, params?: IParameters) => string;
   readonly log: Logger;
@@ -21,9 +23,10 @@ export interface IContext {
   readonly uaa: UAAClient;
 }
 
-export function initContext(req: any, router: Router, route: Route): IContext {
+export function initContext(req: any, router: Router, route: Route, config: IAppConfig): IContext {
   return {
     cf: req.cf,
+    app: config,
     routePartOf: (name: string) => route.definition.name === name || route.definition.name.startsWith(name),
     linkTo: (name: string, params: IParameters = {}) => router.findByName(name).composeURL(params),
     log: req.log,
