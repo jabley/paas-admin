@@ -38,6 +38,42 @@ export default class BillingClient {
 
     return data.map(parseBillableEvent);
   }
+
+  public async getForecastEvents(params: IForecastParameters): Promise<ReadonlyArray<IBillableEvent>> {
+    const response = await this.request({
+      url: '/forecast_events',
+      params: {
+        range_start: params.rangeStart,
+        range_stop: params.rangeStop,
+        org_guid: params.orgGUIDs,
+        events: params.events,
+      },
+    });
+
+    const data: ReadonlyArray<IBillableEventResponse> = response.data;
+
+    return data.map(parseBillableEvent);
+  }
+
+   public async getPricingPlans(params: IRangeable): Promise<ReadonlyArray<IPricingPlan>> {
+    const response = await this.request({
+      url: '/pricing_plans',
+      params: {
+        range_start: params.rangeStart,
+        range_stop: params.rangeStop,
+      },
+    });
+
+    const data: ReadonlyArray<IPricingPlanResponse> = response.data;
+
+    return data.map(parseUsageEvent);
+  }
+}
+
+
+function parseDate(d: Date): string {
+  const m = moment(d);
+  return m.format("YYYY-MM-DD");
 }
 
 function parseTimestamp(s: string): Date {
@@ -66,13 +102,30 @@ function parseUsageEvent(ev: IUsageEventResponse): IUsageEvent {
     eventStop: parseTimestamp(ev.event_stop),
     resourceGUID: ev.resource_guid,
     resourceName: ev.resource_name,
-    resourceType: ev.resource_name,
+    resourceType: ev.resource_type,
     orgGUID: ev.org_guid,
     spaceGUID: ev.space_guid,
     planGUID: ev.plan_guid,
     numberOfNodes: ev.number_of_nodes,
     memoryInMB: ev.memory_in_mb,
     storageInMB: ev.storage_in_mb,
+  };
+}
+
+function parseUsageEventToAPI(ev: IUsageEvent): IUsageEventResponse {
+  return {
+    event_guid: ev.eventGUID,
+    event_start: parseDate(ev.eventStart),
+    event_stop: parseDate(ev.eventStop),
+    resource_guid: ev.resourceGUID,
+    resource_name: ev.resourceName,
+    resource_type: ev.resourceType,
+    org_guid: ev.orgGUID,
+    space_guid: ev.spaceGUID,
+    plan_guid: ev.planGUID,
+    number_of_nodes: ev.numberOfNodes,
+    memory_in_mb: ev.memoryInMB,
+    storage_in_mb: ev.storageInMB,
   };
 }
 

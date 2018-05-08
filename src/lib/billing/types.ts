@@ -1,7 +1,48 @@
-interface IEventFilter {
+interface IRangeable {
   readonly rangeStart: string;
   readonly rangeStop: string;
+}
+
+interface IEventFilter extends IRangeable {
   readonly orgGUIDs: ReadonlyArray<string>;
+}
+
+interface IForecastParameters extends IEventFilter {
+  readonly events: ReadonlyArray<IUsageEvent>;
+}
+
+interface IPricingPlanResponse {
+  readonly name: string;
+  readonly plan_guid: string;
+  readonly valid_from: string;
+  readonly components: ReadonlyArray<IComponentResponse>;
+  readonly number_of_nodes: number;
+  readonly memory_in_mb: number;
+  readonly storage_in_mb: number;
+}
+
+interface IPricingPlan {
+  readonly name: string;
+  readonly planGUID: string;
+  readonly validFrom: Date;
+  readonly components: ReadonlyArray<IComponent>;
+  readonly numberOfNodes: number;
+  readonly memoryInMB: number;
+  readonly storageInMB: number;
+}
+
+interface IComponentResponse {
+  readonly name: string;
+  readonly formula: string;
+  readonly vat_code: string;
+  readonly currency_code: string;
+}
+
+interface IComponent {
+  readonly name: string;
+  readonly formula: string;
+  readonly vatCode: string;
+  readonly currencyCode: string;
 }
 
 interface IPriceComponent {

@@ -1,5 +1,6 @@
 import nock from 'nock';
 import { test } from 'tap';
+import qs from 'qs';
 
 import { config } from '../../app/app.test';
 
@@ -61,6 +62,73 @@ test('should return billable events', async t => {
     rangeStart: '2018-01-01',
     rangeStop: '2018-01-02',
     orgGUIDs: ['3deb9f04-b449-4f94-b3dd-c73cefe5b275'],
+  });
+
+  t.equal(response.length, 1);
+  t.equal(response[0].price.exVAT, 0.02);
+});
+
+test('should return forecast events', async t => {
+  const fakeEvents = [{
+      "event_guid": "00000000-0000-0000-0000-000000000001",
+      "resource_guid": "00000000-0000-0000-0001-000000000001",
+      "resource_name": "fake-app-1",
+      "resource_type": "app",
+      "org_guid": "3deb9f04-b449-4f94-b3dd-c73cefe5b275",
+      "space_guid": "00000001-0001-0000-0000-000000000000",
+      "event_start": "2018-01-01",
+      "event_stop": "2018-01-02",
+      "plan_guid": "f4d4b95a-f55e-4593-8d54-3364c25798c4",
+      "number_of_nodes": 2,
+      "memory_in_mb": 2048,
+      "storage_in_mb": 1024
+    }];
+  nock(config.billingAPI)
+    .get(`/forecast_events?range_start=2018-01-01&range_stop=2018-01-02&org_guid=3deb9f04-b449-4f94-b3dd-c73cefe5b275&events=${qs.stringify(fakeEvents)}`)
+    .reply(200, `[
+      {
+        event_guid:      "aa30fa3c-725d-4272-9052-c7186d4968a6",
+        event_start:     "2001-01-01T00:00:00+00:00",
+        event_stop:      "2001-01-01T01:00:00+00:00",
+        resource_guid:   "c85e98f0-6d1b-4f45-9368-ea58263165a0",
+        resource_name:   "APP1",
+        resource_type:   "app",
+        org_guid:        "51ba75ef-edc0-47ad-a633-a8f6e8770944",
+        space_guid:      "276f4886-ac40-492d-a8cd-b2646637ba76",
+        plan_guid:       "f4d4b95a-f55e-4593-8d54-3364c25798c4",
+        number_of_nodes: 1,
+        memory_in_mb:    1024,
+        storage_in_mb:   0,
+        price: {
+          inc_vat: "0.012",
+          ex_vat:  "0.01",
+          details: {
+            {
+              name:          "compute",
+              plan_name:     "PLAN1",
+              start:         "2001-01-01T00:00:00+00:00",
+              stop:          "2001-01-01T01:00:00+00:00",
+              vat_rate:      "0.2",
+              vat_code:      "Standard",
+              currency_code: "GBP",
+              currency_rate: "1",
+              inc_vat:       "0.012",
+              ex_vat:        "0.01",
+            },
+          },
+        }
+      }
+    ]`);
+
+  const bc = new BillingClient({
+    apiEndpoint: config.billingAPI,
+    accessToken: '__ACCESS_TOKEN__',
+  });
+  const response = await bc.getForecastEvents({
+    rangeStart: '2018-01-01',
+    rangeStop: '2018-01-02',
+    orgGUIDs: ['3deb9f04-b449-4f94-b3dd-c73cefe5b275'],
+    events: fakeEvents,
   });
 
   t.equal(response.length, 1);
